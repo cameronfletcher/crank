@@ -1,0 +1,73 @@
+﻿imports:
+  - https://github.com/aspnet/Benchmarks/blob/main/scenarios/packages.yml?raw=true
+
+variables:
+  localendpoint: http://localhost:5010
+  
+profiles:
+  noload:
+    variables:
+      warmup: 0
+      duration: 0
+
+  short:
+    variables:
+      warmup: 3
+      duration: 7
+
+  pgo:
+    jobs: 
+      application:
+        environmentVariables:
+        - DOTNET_TieredPGO: 1
+        - DOTNET_TC_QuickJitForLoops: 1
+        - DOTNET_ReadyToRun: 0
+
+  local:
+    variables:
+      serverAddress: localhost
+    jobs: 
+      db:
+        endpoints: 
+          - '{{localendpoint}}'
+        aliases:
+          - downstream
+          - extra
+      application:
+        endpoints: 
+          - '{{localendpoint}}'
+        variables:
+          databaseServer: localhost
+        aliases:
+          - main
+      load:
+        endpoints: 
+          - '{{localendpoint}}'
+        aliases:
+          - warmup
+          - secondary
+
+  pi5:
+    variables:
+      serverAddress: 10.10.10.212
+      cores: 4
+    jobs: 
+      db:
+        endpoints: 
+          - http://asp-citrine-amd:5001
+        aliases:
+          - downstream
+          - extra
+      application:
+        endpoints: 
+          - http://10.10.10.212:5001
+        variables:
+          databaseServer: localhost
+        aliases:
+          - main
+      load:
+        endpoints: 
+          - '{{localendpoint}}'
+        aliases:
+          - warmup
+          - secondary
